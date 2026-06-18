@@ -17,10 +17,18 @@ public class Key : MonoBehaviour, IInteractable
     {
         if (interactor.TryGetComponent(out PlayerInventory inv))
         {
+            // 손에 이미 다른 아이템 들려있으면
+            if (inv.currentItemType != ItemType.None)
+            {
+                // 기존 아이템 바닥에 버리면 됨
+                inv.DropCurrentItem();
+            }
             // 손이 비어있을때만 줍기 가능
             if (inv.currentItemType == ItemType.None)
             {
+
                 // 인벤토리 데이터 갱신
+                this.gameObject.layer = 0; // Default 레이어로 변경해서 레이저 팀킬 방지
                 inv.currentItemType = myItem;
                 inv.heldItemObject = this.gameObject; // 자기자신 등록
 

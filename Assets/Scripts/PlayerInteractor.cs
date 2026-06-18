@@ -44,26 +44,10 @@ public class PlayerInteractor : MonoBehaviour
     }
     private void AttemptDrop()
     {
-        // 버리기
-        // 여기서 인벤토리(PlayerInventory)를 검사해서, 손에 쥐고 있는 열쇠의 부모를 끊고 바닥에 툭 떨어뜨리는 코드를 짜야 함
         if (this.gameObject.TryGetComponent(out PlayerInventory inv))
         {
-            if (inv.currentItemType == ItemType.None) { return; } // 맨손일때 버리기 누르는거 방지
-            if (inv.currentItemType != ItemType.None)
-            {
-                inv.heldItemObject.transform.SetParent(null); // 열쇠의 부모를 끊음
-                // 카메라 위치에서 앞으로 1.5미터 떨어진 곳으로 열쇠를 순간이동 시킴 (플레이어와의 충돌로 인해 플레이어가 밀려나는거 방지)
-                inv.heldItemObject.transform.position = cameraTransform.position + cameraTransform.forward * 1.5f;
-                // 물리엔진 원복
-                Rigidbody rb = inv.heldItemObject.GetComponent<Rigidbody>();
-                Collider col = inv.heldItemObject.GetComponent<Collider>();
-                rb.isKinematic = false;
-                col.enabled = true;
-
-                inv.currentItemType = ItemType.None; // 데이터 맨손으로 변경
-                inv.heldItemObject = null; // 현재 아이템 객체 비움
-            }
+            // 인벤토리에 들고 있는 거 버리셈
+            inv.DropCurrentItem();
         }
-
     }
 }
