@@ -1,11 +1,13 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float verticalVelocity = 0f; // y축 속도를 저장하는 변수.
     private InputSystem_Actions input;
-    private Rigidbody rb;
+    private CharacterController cc; // rigidbody 대신 CharacterController로 교체
     private Vector2 moveInput; // 앞뒤, 좌우 두가지 축만 있기때문에 Vector2임.
 
     // Camera Settings
@@ -16,7 +18,7 @@ public class PlayerController : MonoBehaviour
     private float xRotation = 0f;
     void  Awake()
     {
-        rb = GetComponent<Rigidbody>();
+        cc = GetComponent<CharacterController>();
         // 객체 생성 (메모리 할당)
         input = new InputSystem_Actions();
         // Player 맵의 move 행동이 실행되면(performed), OnMove 함수를 호출해라.
@@ -45,15 +47,8 @@ public class PlayerController : MonoBehaviour
         // 대각선 속도 방지 정규화하는건 inputSystem_Actions안에 mode에 들어있었음.
         moveInput = context.ReadValue<Vector2>();
     }
-    private void FixedUpdate()
-    {
-        // 좌/우 + 앞뒤
-        Vector3 moveDirection = (moveInput.x * transform.right) + (moveInput.y * transform.forward);
-        rb.MovePosition(transform.position + moveDirection * moveSpeed * Time.fixedDeltaTime);
-    }
     void Update()
     {
-
         // 마우스 입력값에 감도와 프레임 보정 시간(Time.deltaTime)을 곱해서 변수에 담기
         float mouseX = lookInput.x * lookSensitivity * Time.deltaTime;
         float mouseY = lookInput.y * lookSensitivity * Time.deltaTime;
@@ -65,5 +60,24 @@ public class PlayerController : MonoBehaviour
 
         // 좌우 보기 (몸통 회전) 로직
         transform.Rotate(0f, mouseX, 0f); // 마우스 입력은 매 프레임마다 들어와서 업데이트에 넣음
+
+        // 좌/우 + 앞뒤
+        Vector3 moveDirection = (moveInput.x * transform.right) + (moveInput.y * transform.forward);
+        moveDirection *= moveSpeed;
+
+        // 중력 구현
+        if (cc.isGrounded)
+        { //  땅
+            verticalVelocity = -2.0f;
+        }
+        else
+        { // 공중
+            verticalVelocity += Physics.gravity.y * Time.deltaTime; // 중력가속도 * 프레임
+        }
+        // 수평이동에 중력 합침(y대입)
+        moveDirection.y = verticalVelocity;
+
+        // 캐릭터 컨트롤러 사용
+        cc.Move(moveDirection * Time.deltaTime); // CharacterController는 물리 안쓰니까 Update()임.
     }
 }
