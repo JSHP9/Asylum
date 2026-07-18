@@ -5,6 +5,7 @@ public class SlidingObstacle : MonoBehaviour, IInteractable
 {
     [SerializeField] private Vector3 targetPosOffset = new Vector3(0.7f, 0f, 0f);
     private bool isOpen = false;
+    public bool isLocked = true;
     private bool isAnimating = false; // 애니메이션 중에 e키 눌림 방지
     private Vector3 startPositon;
     private void Awake()
@@ -13,6 +14,12 @@ public class SlidingObstacle : MonoBehaviour, IInteractable
     }
     public void Interact(GameObject interactor)
     {
+        if (isLocked)
+        {
+            Debug.Log("비밀번호 해제, 이제 선반이 밀림.");
+            return;
+        }
+
         if (isAnimating)
             return;
 
@@ -38,5 +45,11 @@ public class SlidingObstacle : MonoBehaviour, IInteractable
         // Slerp는 부동소수점 오차때문에 오차가 있을 수 있다함, 따라서 문 오차 잡기 위해 목표 각도로 확실하게 고정
         transform.localPosition = targetPosition;
         isAnimating = false;
+    }
+    public void UnlockObstacle()
+    {
+        Debug.Log("UnlockObstacle 호출됨");
+        isLocked = false; // 이제 열림.
+        Interact(null); // 자동으로 열림
     }
 }

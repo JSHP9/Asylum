@@ -24,7 +24,7 @@ public class PlayerInteractor : MonoBehaviour
         AttemptInteract();
     }
     private void AttemptDrop(InputAction.CallbackContext context)
-    {
+    { // perfomed가 매개변수 있는 함수 요구해서 씀, 재사용 가능성 때문에 입출력 분리해둔거 위와 같은 말임.
         AttemptDrop();
     }
     private void AttemptInteract()
