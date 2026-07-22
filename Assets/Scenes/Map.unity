@@ -8449,8 +8449,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySight
   player: {fileID: 1430584861}
-  viewRadius: 10
-  viewAngle: 90
+  viewRadius: 15
+  viewAngle: 140
   obstacleMask:
     serializedVersion: 2
     m_Bits: 1
@@ -30938,7 +30938,7 @@ MeshCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30

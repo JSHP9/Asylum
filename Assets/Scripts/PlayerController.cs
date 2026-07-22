@@ -16,6 +16,16 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 lookInput;
     private float xRotation = 0f;
+
+    [Header("Crouching")]
+    private bool isCrouching = false;
+    private float crouchSpeed = 5f; // 앉는 속도
+    [SerializeField] private float standHeight = 2f; // 서있을때 키
+    [SerializeField] private float crouchHeight = 1.2f; // 앉았을때 키
+    [SerializeField] private float standCenter = 1f; // 서있을때 센터
+    [SerializeField] private float crouchCenter = 0.6f; // 앉았을때 센터
+    [SerializeField] private float standCamera = 1.6f; // 서있을때 카메라
+    [SerializeField] private float crouchCamera = 1.0f; // 앉았을때 카메라
     void  Awake()
     {
         cc = GetComponent<CharacterController>();
@@ -25,9 +35,13 @@ public class PlayerController : MonoBehaviour
         input.Player.Move.performed += OnMove;
         // 손가락을 떼면(canceled), 마찬가지로 OnMove를 호출. (값을 0으로 리셋하기 위해)
         input.Player.Move.canceled += OnMove;
-        // 마우스/패드 스틱 입력 이벤트 구독
+        
+        // 마우스/패드 스틱 입력 이벤트 구독(화면 움직임)
         input.Player.Look.performed += ctx => lookInput = ctx.ReadValue<Vector2>(); // ctx는 지역변수
         input.Player.Look.canceled += ctx => lookInput = Vector2.zero;
+
+        // 앉기 입력 이벤트
+        input.Player.Crouch.performed += OnCrouch;
     }
     // 생명주기 관리 (이거 안쓰면 게임 끄고나서도 메모리 줄줄 샘)
     private void OnEnable(){ if (input != null) input.Enable();  } // 입력 받기 시작
@@ -46,6 +60,13 @@ public class PlayerController : MonoBehaviour
         // context 안에 유저가 누른 x, y 좌표값이 들어있음 그걸 꺼내서 변수에 저장함.
         // 대각선 속도 방지 정규화하는건 inputSystem_Actions안에 mode에 들어있었음.
         moveInput = context.ReadValue<Vector2>();
+    }
+
+    private void OnCrouch(InputAction.CallbackContext context)
+    {
+        Debug.Log("쭈그리기 이벤트 함수 호출");
+        // 쭈그림/서있음 상태 변경
+        isCrouching = !isCrouching;
     }
     void Update()
     {
@@ -79,5 +100,25 @@ public class PlayerController : MonoBehaviour
 
         // 캐릭터 컨트롤러 사용
         cc.Move(moveDirection * Time.deltaTime); // CharacterController는 물리 안쓰니까 Update()임.
+
+
+        if (isCrouching)
+        {
+            Debug.Log("앉기 시작");
+            // Mathf.lerp(시작각도, 목표각도, 진행률)을 적용. 선형 보간: 두 점 사이를 일정한 속도로 보간하는 함수
+            cc.height = Mathf.Lerp(cc.height, crouchHeight, crouchSpeed * Time.deltaTime); // 키를 절반에서 0.2정도 더한값으로 천천히 앉음
+            // 센터를 절반에서 0.2정도 더한값으로 천천히 앉힘(센터도 같이 안내려가면 얘가 쪼그라들어서 공중에 뜸)
+            cc.center = new Vector3(cc.center.x, (Mathf.Lerp(cc.center.y, crouchCenter, crouchSpeed * Time.deltaTime)), cc.center.z);
+            // 카메라도 내림
+            cameraPivot.localPosition = new Vector3(cameraPivot.localPosition.x, Mathf.Lerp(cameraPivot.localPosition.y, crouchCamera, crouchSpeed * Time.deltaTime), cameraPivot.localPosition.z);
+        }
+        else
+        {
+            Debug.Log("일어섬");
+            cc.height = Mathf.Lerp(cc.height, standHeight, crouchSpeed * Time.deltaTime); 
+            cc.center = new Vector3(cc.center.x, (Mathf.Lerp(cc.center.y, standCenter, crouchSpeed * Time.deltaTime)), cc.center.z);
+            cameraPivot.localPosition = new Vector3(cameraPivot.localPosition.x, Mathf.Lerp(cameraPivot.localPosition.y, standCamera, crouchSpeed * Time.deltaTime), cameraPivot.localPosition.z);
+        }
+        
     }
 }
