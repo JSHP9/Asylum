@@ -21,7 +21,6 @@ public class Codelock : MonoBehaviour, IInteractable
     public void Interact(GameObject interactor)
     {
         if (codeLockUI.activeSelf) //  이미 활성화 되어있으면 화면 나감 E 한번 더 누르기로 나가기
-        if (codeLockUI.activeSelf) //  이미 활성화 되어있으면 화면 나감 E 한번 더 누르기로 나가기
         {
             CloseUI();
             return;

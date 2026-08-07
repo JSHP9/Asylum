@@ -17,7 +17,6 @@ public class EnemySight : MonoBehaviour
         float distanceToPlayer = Vector3.Distance(transform.position, player.position);
         if (distanceToPlayer > viewRadius)
         {
-            Debug.Log("멀리있어서 안보임");
             return false; // 사야보다 멀리 있음
         }
 
@@ -33,7 +32,6 @@ public class EnemySight : MonoBehaviour
         // 시야각(viewAngle)이 왼쪽 45, 오른쪽 45해서 90인거라 45보다 크면 시야 밖에 있는거임
         if (angleToPlayer > viewAngle / 2f)
         {
-            Debug.Log("시야 밖이라 안보임");
             return false;
         }
 
@@ -41,7 +39,6 @@ public class EnemySight : MonoBehaviour
         // ai위치, 플레이어 각도, 플레이어 거리, 벽 레이어
         if (Physics.Raycast(transform.position, dirToPlayer, distanceToPlayer, obstacleMask))
         {
-            Debug.Log("벽에 막혀서 안보임");
             return false; // 안보임
         }
 

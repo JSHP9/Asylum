@@ -16,7 +16,7 @@ public class SlidingObstacle : MonoBehaviour, IInteractable
     {
         if (isLocked)
         {
-            Debug.Log("비밀번호 해제, 이제 선반이 밀림.");
+            Debug.Log("비밀번호 먼저 해제해야함.");
             return;
         }
 
