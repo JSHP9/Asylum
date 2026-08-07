@@ -26,6 +26,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float crouchCenter = 0.6f; // 앉았을때 센터
     [SerializeField] private float standCamera = 1.6f; // 서있을때 카메라
     [SerializeField] private float crouchCamera = 1.0f; // 앉았을때 카메라
+    public bool IsHidden { get; private set; } // 숨기 프로퍼티(PlayerController내에서만 수정 가능), 초기값 안넣으면 자동으로 기본값으로 false가 들어감.
     void  Awake()
     {
         cc = GetComponent<CharacterController>();
@@ -61,15 +62,16 @@ public class PlayerController : MonoBehaviour
         // 대각선 속도 방지 정규화하는건 inputSystem_Actions안에 mode에 들어있었음.
         moveInput = context.ReadValue<Vector2>();
     }
-
     private void OnCrouch(InputAction.CallbackContext context)
     {
-        Debug.Log("쭈그리기 이벤트 함수 호출");
         // 쭈그림/서있음 상태 변경
         isCrouching = !isCrouching;
     }
     void Update()
     {
+        if (IsHidden) // 숨어있는동안 못움직임
+            return;
+
         // 마우스 입력값에 감도와 프레임 보정 시간(Time.deltaTime)을 곱해서 변수에 담기
         float mouseX = lookInput.x * lookSensitivity * Time.deltaTime;
         float mouseY = lookInput.y * lookSensitivity * Time.deltaTime;
@@ -104,7 +106,6 @@ public class PlayerController : MonoBehaviour
 
         if (isCrouching)
         {
-            Debug.Log("앉기 시작");
             // Mathf.lerp(시작각도, 목표각도, 진행률)을 적용. 선형 보간: 두 점 사이를 일정한 속도로 보간하는 함수
             cc.height = Mathf.Lerp(cc.height, crouchHeight, crouchSpeed * Time.deltaTime); // 키를 절반에서 0.2정도 더한값으로 천천히 앉음
             // 센터를 절반에서 0.2정도 더한값으로 천천히 앉힘(센터도 같이 안내려가면 얘가 쪼그라들어서 공중에 뜸)
@@ -114,11 +115,15 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            Debug.Log("일어섬");
             cc.height = Mathf.Lerp(cc.height, standHeight, crouchSpeed * Time.deltaTime); 
             cc.center = new Vector3(cc.center.x, (Mathf.Lerp(cc.center.y, standCenter, crouchSpeed * Time.deltaTime)), cc.center.z);
             cameraPivot.localPosition = new Vector3(cameraPivot.localPosition.x, Mathf.Lerp(cameraPivot.localPosition.y, standCamera, crouchSpeed * Time.deltaTime), cameraPivot.localPosition.z);
         }
         
+    }
+
+    public void SetHidden(bool hidden)
+    {
+        IsHidden = hidden; // 숨기 상태 변경
     }
 }
