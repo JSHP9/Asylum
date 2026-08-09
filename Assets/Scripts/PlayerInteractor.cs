@@ -8,11 +8,14 @@ public class PlayerInteractor : MonoBehaviour
     [SerializeField] private LayerMask interactLayer;
     private InputSystem_Actions inputInteract; // 상호작용 inputSystem
 
+    private PlayerController player; // 숨기 기능 구현때문에 추가
+
     private void Awake()
     {
         inputInteract = new InputSystem_Actions();
         inputInteract.Player.Interact.performed += OnInteractAction; // 상호작용은 한번만 누르면 끝이니까 cancled안만들었음
         inputInteract.Player.Drop.performed += AttemptDrop; // 버리기
+        player = GetComponent<PlayerController>();
     }
 
     private void OnEnable() { if (inputInteract != null) inputInteract.Enable(); }
@@ -30,6 +33,12 @@ public class PlayerInteractor : MonoBehaviour
     private void AttemptInteract()
     {
         Ray ray = new Ray(cameraTransform.position, cameraTransform.forward); // 레이저 포인터
+
+        if (player.IsHidden && player.CurrentHideSpot != null) // 숨은상태 && 어디 HideSpot에 숨었는지 기록이 되어있음.
+        {
+            player.CurrentHideSpot.Interact(gameObject); // 현재 기록된 숨은 위치랑 상호작용.
+            return;
+        }
         // RaycastHit hit; // 레이저가 맞은 결과 저장용(물리 충돌 결과 보고서). 그냥 여기서 안쓰고 Raycast안에 넣었음(요즘 방식이라함)
         // Raycast(광선, 충돌 정보 컨테이너, 사정거리, 검사할 레이어)에서 광선이 시작지점, 방향인데 ray안에 시작지점이랑 방향 둘다 들어있어서 저리 가능함
         if (Physics.Raycast(ray, out RaycastHit hit, armLength, interactLayer))
@@ -44,6 +53,8 @@ public class PlayerInteractor : MonoBehaviour
     }
     private void AttemptDrop()
     {
+        if (player.IsHidden) return; // 숨은 동안 드랍 금지
+
         if (this.gameObject.TryGetComponent(out PlayerInventory inv))
         {
             // 인벤토리에 들고 있는 거 버리셈

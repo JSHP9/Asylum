@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float standCamera = 1.6f; // 서있을때 카메라
     [SerializeField] private float crouchCamera = 1.0f; // 앉았을때 카메라
     public bool IsHidden { get; private set; } // 숨기 프로퍼티(PlayerController내에서만 수정 가능), 초기값 안넣으면 자동으로 기본값으로 false가 들어감.
+    public HideSpot CurrentHideSpot { get; set; }
     void  Awake()
     {
         cc = GetComponent<CharacterController>();
