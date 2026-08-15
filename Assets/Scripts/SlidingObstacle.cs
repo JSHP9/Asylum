@@ -5,8 +5,11 @@ public class SlidingObstacle : MonoBehaviour, IInteractable
 {
     [SerializeField] private Vector3 targetPosOffset = new Vector3(0.7f, 0f, 0f);
     private bool isOpen = false;
-    public bool isLocked = true;
+    public bool IsOpen => isOpen;
+    [SerializeField] private bool isLocked = true; // Inspector에서 잠금 여부 설정
+    public bool IsLocked => isLocked; // 외부에서는 읽기만 가능
     private bool isAnimating = false; // 애니메이션 중에 e키 눌림 방지
+    public bool IsAnimating => isAnimating;
     private Vector3 startPositon;
     private void Awake()
     {

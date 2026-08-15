@@ -501,7 +501,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9bc52de5c21ba54e8cd392341ada823, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Door
-  isLocked: 0
+  isLocked: 1
 --- !u!1 &30398561
 GameObject:
   m_ObjectHideFlags: 0
@@ -8687,6 +8687,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAI
   target: {fileID: 1430584861}
+  doorLength: 1.5
 --- !u!114 &818450203
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9339,7 +9340,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9bc52de5c21ba54e8cd392341ada823, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Door
-  isLocked: 0
+  isLocked: 1
 --- !u!1 &879578306
 GameObject:
   m_ObjectHideFlags: 0
