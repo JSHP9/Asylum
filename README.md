@@ -6,7 +6,7 @@ A 3D first-person horror escape game made with Unity.
 
 Asylum is a first-person horror escape game inspired by **Granny**.
 
-This project focuses on object-oriented design, and gameplay systems while aiming to deliver a fully playable game.
+This project focuses on object-oriented design and gameplay systems while aiming to deliver a fully playable game.
 
 ## Current Features
 
@@ -19,6 +19,8 @@ This project focuses on object-oriented design, and gameplay systems while aimin
 - Enemy sight detection
 - Enemy chase & patrol
 - Crouch system
+- Hide system
+- AI door interaction
 
 ## Tech Stack
 
@@ -35,8 +37,9 @@ This project focuses on object-oriented design, and gameplay systems while aimin
 - [x] Puzzle System
 - [x] Enemy AI (Sight / Chase / Patrol)
 - [x] Crouch
-- [ ] Hide System
+- [x] Hide System
+- [x] AI Door Interaction
+- [ ] AI Model & Animation
 - [ ] AI Hearing
-- [ ] AI Door Interaction
 - [ ] Ending
 - [ ] UI & Sound
