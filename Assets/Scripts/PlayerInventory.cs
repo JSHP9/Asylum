@@ -12,6 +12,11 @@ public class PlayerInventory : MonoBehaviour
         // 손에 든 게 없으면 버릴 것도 없으니 걍 무시함
         if (currentItemType == ItemType.None || heldItemObject == null) return;
 
+        if (heldItemObject.TryGetComponent<Key>(out Key heldKey))
+        {
+            heldKey.ResetTransform();
+        }
+
         heldItemObject.transform.SetParent(null); // 열쇠의 부모를 끊음
         heldItemObject.transform.position = transform.position + Vector3.up * 1.5f + transform.forward * 1.2f; // 위쪽으로 1.5f 올려서 가슴부근에서 아이템 떨어지게 설정(아이템 바닥 꺼짐 방지)
         heldItemObject.layer = LayerMask.NameToLayer("Interactable"); // 버려지는 물건의 레이어를 다시 상호작용 가능한 레이어로 원복
@@ -20,9 +25,9 @@ public class PlayerInventory : MonoBehaviour
         Collider col = heldItemObject.GetComponent<Collider>();
         rb.isKinematic = false;
         col.enabled = true;
+
         // 데이터 리셋
         currentItemType = ItemType.None; // 데이터 맨손으로 변경
         heldItemObject = null; // 현재 아이템 객체 비움
-
     }
 }
