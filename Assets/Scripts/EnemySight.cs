@@ -4,10 +4,10 @@ public class EnemySight : MonoBehaviour
 {
     [Header("Sight Settings")]
     public Transform player; // 플레이어 타겟
-    public float viewRadius = 15f; // 귀신이 볼 수 있는 최대 거리
+    public float viewRadius = 20f; // ai가 볼 수 있는 최대 거리
     // [Range(0, 360)]은 Unity의 Attribute(특성)이라함, nspector에서 값을 입력할 때 슬라이더를 만들어줌
     // 이렇게 선언하면 인스펙터에서는 강제력이 생김, 코드는 아님
-    [Range(0, 360)] public float viewAngle = 140f; // 귀신의 시야각, 전방 90도면 좌우 45도씩
+    [Range(0, 360)] public float viewAngle = 270f; // ai의 시야각 90도면 좌우 45도
 
     public LayerMask obstacleMask; // 벽, 문 등 시야를 가리는 장애물 레이어
 
