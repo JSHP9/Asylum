@@ -6,7 +6,7 @@ public class EnemyAI : MonoBehaviour
     private NavMeshAgent agent;
     private EnemySight sight;
     private PlayerController player; // 플레이어의 PlayerController 스크립트(상태 / 기능)
-
+    private Animator animator;
     private float waitTime = 0f; // 주변 둘러보는 시간
     private bool isPatrolWaiting = false; // 주변 둘러보는 상태
     [SerializeField] private Transform target; // 플레이어의 Transform(위치/회전 정보)
@@ -18,6 +18,7 @@ public class EnemyAI : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         sight = GetComponent<EnemySight>();
         player = target.GetComponent<PlayerController>();
+        animator = GetComponentInChildren<Animator>();
     }
     private bool CheckDoor()
     {
@@ -85,7 +86,7 @@ public class EnemyAI : MonoBehaviour
 
         Vector3 randomPosition =
             transform.position +
-            Random.insideUnitSphere * Random.Range(10f, 20f);
+            Random.insideUnitSphere * Random.Range(15f, 30f);
 
         randomPosition.y = transform.position.y;
 
@@ -128,12 +129,18 @@ public class EnemyAI : MonoBehaviour
         {
             wasHidden = false; // 다시 안 숨은 상태가 되면 초기화
         }
+        
+        animator.SetInteger("State", 1); // 순찰
+        agent.speed = 2.0f; // 순찰 속도 2.0f
 
         // 안 숨었고 시야에 보이면 추적
         if (!hiddenNow && sight.CanSeePlayer())
         {
             if (ignoreDoor) // 눈에 보여도 문이 막혀있으면 추적하면안됨
                 return;
+
+            animator.SetInteger("State", 2); // 추적 애니메이션
+            agent.speed = 3.5f; // 추격 속도 3.5f
             agent.SetDestination(target.position);
             isPatrolWaiting = false;
             waitTime = 0f;
@@ -148,7 +155,7 @@ public class EnemyAI : MonoBehaviour
                 {
                     waitTime += Time.deltaTime;
 
-                    // 나중에 LookAround 애니메이션 넣을 예정
+                    animator.SetInteger("State", 0); // Idle 애니메이션
                     if (waitTime >= 2f)
                     {
                         waitTime = 0f;
