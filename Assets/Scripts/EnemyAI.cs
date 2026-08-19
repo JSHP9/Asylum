@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
-
+using System.Collections; // 코루틴 용도
 public class EnemyAI : MonoBehaviour
 {
     private NavMeshAgent agent;
@@ -12,7 +12,9 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private Transform target; // 플레이어의 Transform(위치/회전 정보)
     [SerializeField] private float doorLength = 1.5f;
     private bool wasHidden = false; // 이전 프레임에 숨었는지
-    private bool ignoreDoor = false;
+    private bool ignoreDoor = false; // 잠긴 문 무시
+    [SerializeField] private float attackRange = 1.5f; // 공격 범위
+    private bool isAttacking = false; // 공격 중인지
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -97,11 +99,24 @@ public class EnemyAI : MonoBehaviour
             isPatrolWaiting = true;
         }
     }
+    private IEnumerator Attack()
+    { // 공격 코루틴
+        isAttacking = true;
+
+        agent.ResetPath();
+        animator.SetTrigger("Attack");
+        player.Die(transform);
+        yield return new WaitForSeconds(2.267f);
+
+        isAttacking = false;
+    }
     private void Update()
     {
         if (player == null)
             return;
 
+        if (isAttacking)
+            return;
         if (CheckDoor())
             return; // 문 여는중, 이동 x
 
@@ -138,6 +153,15 @@ public class EnemyAI : MonoBehaviour
         {
             if (ignoreDoor) // 눈에 보여도 문이 막혀있으면 추적하면안됨
                 return;
+
+            float distanceToPlayer = Vector3.Distance(transform.position, target.position);
+
+            // 공격 범위 안에 들어오면 공격
+            if (attackRange >= distanceToPlayer)
+            {
+                StartCoroutine(Attack());
+                return;
+            }
 
             animator.SetInteger("State", 2); // 추적 애니메이션
             agent.speed = 3.5f; // 추격 속도 3.5f
