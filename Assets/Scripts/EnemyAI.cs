@@ -101,12 +101,18 @@ public class EnemyAI : MonoBehaviour
     }
     private IEnumerator Attack()
     { // 공격 코루틴
+        if (isAttacking || player.IsDead) // 공격중 or 죽었으면 공격 하지마셈
+            yield break;
+
         isAttacking = true;
+
 
         agent.ResetPath();
         animator.SetTrigger("Attack");
+        // 공격 애니메이션에서 손들고 내려친 다음에 넘어지게
+        yield return new WaitForSeconds(1.0f);
         player.Die(transform);
-        yield return new WaitForSeconds(2.267f);
+        yield return new WaitForSeconds(2.267f -1.0f);
 
         isAttacking = false;
     }
@@ -114,6 +120,13 @@ public class EnemyAI : MonoBehaviour
     {
         if (player == null)
             return;
+
+        if (player.IsDead)
+        {
+            agent.ResetPath();
+            animator.SetInteger("State", 0); // Idle
+            return;
+        }
 
         if (isAttacking)
             return;
@@ -156,8 +169,8 @@ public class EnemyAI : MonoBehaviour
 
             float distanceToPlayer = Vector3.Distance(transform.position, target.position);
 
-            // 공격 범위 안에 들어오면 공격
-            if (attackRange >= distanceToPlayer)
+            // 안죽었고 && 공격 범위 안에 들어오면 공격
+            if (!player.IsDead && attackRange >= distanceToPlayer)
             {
                 StartCoroutine(Attack());
                 return;
