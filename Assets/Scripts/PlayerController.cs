@@ -35,6 +35,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private int maxLives = 3; // 최대 목숨
     private int currentLives; // 현재 목숨
     private bool isDead = false; // 사망 중인지
+    public bool IsDead => isDead; // 플레이어 두번 연속 죽이는거 때문에 EnemyAI에 살아있을때만 때리라고 조건 추가하려고 프로퍼티 만들어둠.
     void  Awake()
     {
         cc = GetComponent<CharacterController>();
@@ -153,23 +154,46 @@ public class PlayerController : MonoBehaviour
         // ai를 바라보도록 카메라 연출
         Vector3 directionToAttacker = attacker.position - cameraPivot.position;
         Quaternion targetRotation = Quaternion.LookRotation(directionToAttacker);
-        //Vector3 targetPosition = attacker.position + attacker.forward * 1.0f + Vector3.up * 1.2f;
-        //Quaternion targetRotation = Quaternion.LookRotation(attacker.position + Vector3.up * 1.2f - targetPosition);
+
+        //Vector3 targetPosition = attacker.position + attacker.forward * 1.0f + Vector3.up * 1.2f; 
+        //Quaternion targetRotation = Quaternion.LookRotation(attacker.position + Vector3.up * 1.2f - targetPosition); 
 
         float time = 0f;
-        float duration = 0.5f; // 회전 시간
-        Quaternion startRotation = cameraPivot.rotation; //  현재 카메라 회전
+        float duration = 0.7f; // 회전 + 쓰러지는 시간
 
-        while (time < duration) // 0.5c초동안
+        Quaternion startRotation = cameraPivot.rotation; // 현재 카메라 회전
+        Vector3 startPosition = cameraPivot.localPosition; // 현재 카메라 위치
+
+        // 카메라가 아래로 떨어지면서 쓰러지는 위치
+        Vector3 targetPosition = new Vector3(startPosition.x, startPosition.y - 1.5f, startPosition.z);
+
+
+        // 카메라가 오른쪽 뒤로 넘어지는 회전
+        Quaternion deathRotation = targetRotation * Quaternion.Euler(0f, 0f, -65f);
+        // -20f, 0f, -65f);
+
+        while (time < duration) // 0.7초동안
         {
             time += Time.deltaTime;
-            cameraPivot.rotation = Quaternion.Slerp(startRotation, targetRotation, time / duration); // 구면 선형 보간
+
+            float t = Mathf.SmoothStep(0f, 1f, time / duration);
+
+            // 카메라 위치를 아래로 이동
+            cameraPivot.localPosition =
+                Vector3.Lerp(startPosition, targetPosition, t);
+
+            // 카메라가 AI를 바라보면서 쓰러짐
+            cameraPivot.rotation =
+                Quaternion.Slerp(startRotation, deathRotation, t);
 
             yield return null; // 한 프레임 쉬기, 이래야 매 프레임마다 카메라 값이 조금씩 바뀜
         }
-        cameraPivot.rotation = targetRotation; // Slerp는 부동소수점 오차가 있을 수 있어서 마지막에 정확하게 고정하는게 국룰인거같음
 
-        yield return new WaitForSeconds(1f); // 사망 연출 잠깐 유지(0.5초동안 카메라 바라봄 + 1초동안 유지)
+        // Slerp / Lerp는 부동소수점 오차가 있을 수 있어서 마지막에 정확하게 고정
+        cameraPivot.localPosition = targetPosition;
+        cameraPivot.rotation = deathRotation;
+
+        yield return new WaitForSeconds(1f); // 사망 연출 잠깐 유지
 
         currentLives--;
 
@@ -179,6 +203,9 @@ public class PlayerController : MonoBehaviour
             yield break;
         }
 
+        // 리스폰 전 잠깐 대기
+        yield return new WaitForSeconds(1f);
+
         // 리스폰
         cc.enabled = false; // 순간이동 해야해서 cc 잠깐 꺼둠
 
@@ -186,6 +213,9 @@ public class PlayerController : MonoBehaviour
         transform.rotation = respawnPoint.rotation;
 
         xRotation = 0f;
+
+        // 카메라 위치도 원래 눈높이로 복구
+        cameraPivot.localPosition = new Vector3(cameraPivot.localPosition.x, standCamera, cameraPivot.localPosition.z);
         cameraPivot.localRotation = Quaternion.identity;
 
         cc.enabled = true;
