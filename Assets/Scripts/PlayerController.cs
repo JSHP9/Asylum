@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
@@ -28,6 +29,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float crouchCamera = 1.0f; // 앉았을때 카메라
     public bool IsHidden { get; private set; } // 숨기 프로퍼티(PlayerController내에서만 수정 가능), 초기값 안넣으면 자동으로 기본값으로 false가 들어감.
     public HideSpot CurrentHideSpot { get; set; }
+
+    [Header("Death")]
+    [SerializeField] private Transform respawnPoint; // 플레이어가 부활할 위치
+    [SerializeField] private int maxLives = 3; // 최대 목숨
+    private int currentLives; // 현재 목숨
+    private bool isDead = false; // 사망 중인지
     void  Awake()
     {
         cc = GetComponent<CharacterController>();
@@ -44,6 +51,8 @@ public class PlayerController : MonoBehaviour
 
         // 앉기 입력 이벤트
         input.Player.Crouch.performed += OnCrouch;
+
+        currentLives = maxLives; // 목숨 초기화
     }
     // 생명주기 관리 (이거 안쓰면 게임 끄고나서도 메모리 줄줄 샘)
     private void OnEnable(){ if (input != null) input.Enable();  } // 입력 받기 시작
@@ -71,6 +80,9 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         if (IsHidden) // 숨어있는동안 못움직임
+            return;
+
+        if (isDead) // 죽었으면 못움직임
             return;
 
         // 마우스 입력값에 감도와 프레임 보정 시간(Time.deltaTime)을 곱해서 변수에 담기
@@ -126,5 +138,57 @@ public class PlayerController : MonoBehaviour
     public void SetHidden(bool hidden)
     {
         IsHidden = hidden; // 숨기 상태 변경
+    }
+
+    public void Die(Transform attacker)
+    {
+        if (isDead) return;
+        StartCoroutine(DeathSequence(attacker));
+    }
+    private IEnumerator DeathSequence(Transform attacker)
+    {
+        isDead = true;
+        moveInput = Vector2.zero;
+
+        // ai를 바라보도록 카메라 연출
+        Vector3 directionToAttacker = attacker.position - cameraPivot.position;
+        Quaternion targetRotation = Quaternion.LookRotation(directionToAttacker);
+        //Vector3 targetPosition = attacker.position + attacker.forward * 1.0f + Vector3.up * 1.2f;
+        //Quaternion targetRotation = Quaternion.LookRotation(attacker.position + Vector3.up * 1.2f - targetPosition);
+
+        float time = 0f;
+        float duration = 0.5f; // 회전 시간
+        Quaternion startRotation = cameraPivot.rotation; //  현재 카메라 회전
+
+        while (time < duration) // 0.5c초동안
+        {
+            time += Time.deltaTime;
+            cameraPivot.rotation = Quaternion.Slerp(startRotation, targetRotation, time / duration); // 구면 선형 보간
+
+            yield return null; // 한 프레임 쉬기, 이래야 매 프레임마다 카메라 값이 조금씩 바뀜
+        }
+        cameraPivot.rotation = targetRotation; // Slerp는 부동소수점 오차가 있을 수 있어서 마지막에 정확하게 고정하는게 국룰인거같음
+
+        yield return new WaitForSeconds(1f); // 사망 연출 잠깐 유지(0.5초동안 카메라 바라봄 + 1초동안 유지)
+
+        currentLives--;
+
+        if (currentLives <= 0)
+        { // 남은 목숨 없음
+            Debug.Log("Game Over");
+            yield break;
+        }
+
+        // 리스폰
+        cc.enabled = false; // 순간이동 해야해서 cc 잠깐 꺼둠
+
+        transform.position = respawnPoint.position;
+        transform.rotation = respawnPoint.rotation;
+
+        xRotation = 0f;
+        cameraPivot.localRotation = Quaternion.identity;
+
+        cc.enabled = true;
+        isDead = false;
     }
 }
