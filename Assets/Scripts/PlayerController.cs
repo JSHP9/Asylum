@@ -1,7 +1,8 @@
+using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
@@ -36,6 +37,9 @@ public class PlayerController : MonoBehaviour
     private int currentLives; // 현재 목숨
     private bool isDead = false; // 사망 중인지
     public bool IsDead => isDead; // 플레이어 두번 연속 죽이는거 때문에 EnemyAI에 살아있을때만 때리라고 조건 추가하려고 프로퍼티 만들어둠.
+    [Header("Sound")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip DeadSound;
     void  Awake()
     {
         cc = GetComponent<CharacterController>();
@@ -69,6 +73,11 @@ public class PlayerController : MonoBehaviour
 
     private void OnMove(InputAction.CallbackContext context)
     {
+        if (isDead)
+        { // 죽었으면 움직이지마셈
+            moveInput = Vector2.zero;
+            return;
+        }
         // context 안에 유저가 누른 x, y 좌표값이 들어있음 그걸 꺼내서 변수에 저장함.
         // 대각선 속도 방지 정규화하는건 inputSystem_Actions안에 mode에 들어있었음.
         moveInput = context.ReadValue<Vector2>();
@@ -193,6 +202,11 @@ public class PlayerController : MonoBehaviour
         cameraPivot.localPosition = targetPosition;
         cameraPivot.rotation = deathRotation;
 
+        // 넘어지는 쿵 소리
+        if (audioSource != null && DeadSound != null)
+        {
+            audioSource.PlayOneShot(DeadSound);
+        }
         yield return new WaitForSeconds(1f); // 사망 연출 잠깐 유지
 
         currentLives--;

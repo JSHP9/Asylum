@@ -5,6 +5,10 @@ using System.Collections; // 코루틴 용도
 public class Padlock : MonoBehaviour, IInteractable
 {
     [SerializeField] private ItemType requiredKey; // 사용할 열쇠
+        [Header("Sound")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip unlockSound;
+    [SerializeField] private AudioClip dropSound;
     private Rigidbody rb;
     // 인스펙터에서 문 여는 함수를 연결할 공간
     public UnityEvent onUnlock;
@@ -24,7 +28,10 @@ public class Padlock : MonoBehaviour, IInteractable
                 if (inv.currentItemType == requiredKey) // 플레이어 인벤토리에 있는게 현재 요구하고 있는 열쇠랑 일치함
                 {
                     // 문 열림
-                    Debug.Log("자물쇠 풀림");
+                    if (audioSource != null && unlockSound != null)
+                    {
+                        audioSource.PlayOneShot(unlockSound);
+                    }
                     onUnlock.Invoke(); // 열리라는 신호
                     transform.SetParent(null);
                     rb.isKinematic = false; // 자물쇠 해제시 바닥에 떨어짐
@@ -48,7 +55,23 @@ public class Padlock : MonoBehaviour, IInteractable
     }
     private void OnCollisionEnter(Collision collision)
     {
-        // 바닥에 떨어지면 나는 소리(이거듣고 ai가 찾아옴)
-        // 나중에 구현
+        // 자물쇠가 바닥에 떨어졌을 때
+        if (rb.isKinematic)
+            return;
+
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
+        {
+            if (audioSource != null && dropSound != null)
+            {
+                audioSource.PlayOneShot(dropSound);
+            }
+
+            EnemyAI enemyAI = FindFirstObjectByType<EnemyAI>();
+
+            if (enemyAI != null)
+            {
+                enemyAI.HearNoise(transform.position);
+            }
+        }
     }
 }
