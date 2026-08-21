@@ -11,6 +11,10 @@ public class SlidingObstacle : MonoBehaviour, IInteractable
     private bool isAnimating = false; // 애니메이션 중에 e키 눌림 방지
     public bool IsAnimating => isAnimating;
     private Vector3 startPositon;
+
+    [Header("Sound")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip Sound;
     private void Awake()
     {
         startPositon = transform.localPosition;
@@ -27,6 +31,11 @@ public class SlidingObstacle : MonoBehaviour, IInteractable
             return;
 
         isOpen = !isOpen;
+        // 문 밀리는 소리
+        if (audioSource != null && Sound != null)
+        {
+            audioSource.PlayOneShot(Sound);
+        }
         Vector3 targetPosition = isOpen ? startPositon + targetPosOffset : startPositon; // 장애물 밀기 : 장애물 밀기 목표 위치 설정
 
         StartCoroutine(SlideObstacle(targetPosition));

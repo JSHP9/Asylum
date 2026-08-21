@@ -5,6 +5,10 @@ public class Key : MonoBehaviour, IInteractable
     // 인스펙터 창에서 키인지 레드키인지 마우스로 고를 수 있음
     [SerializeField] private ItemType myItem = ItemType.Key;
 
+    [Header("Sound")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip dropSound;
+
     [Header("손에 들었을 때 설정")]
     [SerializeField] private Vector3 heldScale = new Vector3(2f, 2f, 2f);        // 손에 들었을 때 크기
     [SerializeField] private Vector3 heldRotation = new Vector3(0f, 90f, 0f);    // 손에 들었을 때 방향
@@ -55,6 +59,26 @@ public class Key : MonoBehaviour, IInteractable
                 // 인스펙터에 설정한 손에 든 방향과 크기 적용
                 transform.localRotation = Quaternion.Euler(heldRotation);
                 transform.localScale = heldScale;
+            }
+        }
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (rb.isKinematic)
+            return;
+
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
+        {
+            if (audioSource != null && dropSound != null)
+            {
+                audioSource.PlayOneShot(dropSound);
+            }
+
+            EnemyAI enemyAI = FindFirstObjectByType<EnemyAI>();
+
+            if (enemyAI != null)
+            {
+                enemyAI.HearNoise(transform.position);
             }
         }
     }

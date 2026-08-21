@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections; // 코루틴 용도
+
 public class EnemyAI : MonoBehaviour
 {
     private NavMeshAgent agent;
@@ -11,16 +12,35 @@ public class EnemyAI : MonoBehaviour
     private bool isPatrolWaiting = false; // 주변 둘러보는 상태
     [SerializeField] private Transform target; // 플레이어의 Transform(위치/회전 정보)
     [SerializeField] private float doorLength = 1.5f;
+
     private bool wasHidden = false; // 이전 프레임에 숨었는지
     private bool ignoreDoor = false; // 잠긴 문 무시
     [SerializeField] private float attackRange = 1.5f; // 공격 범위
     private bool isAttacking = false; // 공격 중인지
+
+    [Header("Hearing")]
+    private bool isInvestigating = false; // 소리 조사중
+    private Vector3 noisePosition; // 소리 위치
+    [SerializeField] private float investigateWaitTime = 0.5f; // 조사 대기 시간
+
+    [Header("Sound")]
+    [SerializeField] private AudioSource patrolAudioSource; // 평상시 배경음 AudioSource
+    [SerializeField] private AudioSource chaseAudioSource; // 추격 배경음 AudioSource
+    [SerializeField] private AudioSource sfxAudioSource; // 공격 효과음 AudioSource
+    [SerializeField] private AudioClip patrolBGM; // 평상시 배경음
+    [SerializeField] private AudioClip chaseBGM; // 추격 배경음
+    [SerializeField] private AudioClip attackSound; // 공격 소리
+    private bool isChasing = false;
+
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         sight = GetComponent<EnemySight>();
         player = target.GetComponent<PlayerController>();
         animator = GetComponentInChildren<Animator>();
+
+        // 게임 시작시 평상시 배경음 재생
+        StartPatrolBGM();
     }
     private bool CheckDoor()
     {
@@ -53,7 +73,6 @@ public class EnemyAI : MonoBehaviour
                     return true;
                 }
             }
-
             SlidingObstacle slidingObstacle =
                 hit.collider.GetComponentInParent<SlidingObstacle>();
 
@@ -105,34 +124,153 @@ public class EnemyAI : MonoBehaviour
             yield break;
 
         isAttacking = true;
-
-
         agent.ResetPath();
         animator.SetTrigger("Attack");
+
         // 공격 애니메이션에서 손들고 내려친 다음에 넘어지게
         yield return new WaitForSeconds(1.0f);
+
+        if (sfxAudioSource != null && attackSound != null)
+        {
+            sfxAudioSource.PlayOneShot(attackSound);
+        }
+
         player.Die(transform);
-        yield return new WaitForSeconds(2.267f -1.0f);
+
+        yield return new WaitForSeconds(2.267f - 1.0f);
 
         isAttacking = false;
     }
-    private void Update()
+    public void HearNoise(Vector3 position)
     {
         if (player == null)
             return;
 
         if (player.IsDead)
+            return;
+
+        if (isAttacking) // 이미 공격 중이면 소리 무시
+            return;
+
+        noisePosition = position;
+        isInvestigating = true;
+
+        isPatrolWaiting = false;
+        waitTime = 0f;
+
+        agent.SetDestination(noisePosition);
+    }
+    private void StartPatrolBGM()
+    {
+        if (patrolAudioSource == null || patrolBGM == null)
+            return;
+
+        if (!patrolAudioSource.isPlaying)
         {
+            patrolAudioSource.clip = patrolBGM;
+            patrolAudioSource.loop = true;
+            patrolAudioSource.Play();
+        }
+    }
+    private void StopPatrolBGM()
+    {
+        if (patrolAudioSource == null)
+            return;
+
+        if (patrolAudioSource.isPlaying)
+        {
+            patrolAudioSource.Stop();
+        }
+    }
+    private void StartChaseBGM()
+    {
+        if (isChasing)
+            return;
+
+        isChasing = true;
+
+        // 추격 시작하면 평상시 배경음 정지
+        StopPatrolBGM();
+
+        if (chaseAudioSource != null && chaseBGM != null)
+        {
+            chaseAudioSource.clip = chaseBGM;
+            chaseAudioSource.loop = true;
+            chaseAudioSource.Play();
+        }
+    }
+    private void StopChaseBGM()
+    {
+        if (!isChasing)
+            return;
+
+        isChasing = false;
+        if (chaseAudioSource != null)
+        {
+            chaseAudioSource.Stop();
+        }
+        // 추격 종료하면 평상시 배경음 다시 재생
+        StartPatrolBGM();
+    }
+    private void Update()
+    {
+        if (player == null)
+            return;
+        if (player.IsDead)
+        {
+            StopChaseBGM();
+
             agent.ResetPath();
             animator.SetInteger("State", 0); // Idle
+
             return;
         }
 
         if (isAttacking)
             return;
+
         if (CheckDoor())
             return; // 문 여는중, 이동 x
 
+        if (isInvestigating) // 조사 중
+        {
+            // 조사 중에는 추격 BGM을 끄고 평상시 배경음 유지
+            StopChaseBGM();
+
+            // 조사 중 플레이어 발견
+            if (!player.IsHidden && sight.CanSeePlayer())
+            {
+                isInvestigating = false;
+                isPatrolWaiting = false;
+                waitTime = 0f;
+
+                // 여기서 return하지 않음
+                // 아래 Chase 로직으로 넘어감
+            }
+            else
+            {
+                animator.SetInteger("State", 2);
+                agent.speed = 2.5f;
+                agent.SetDestination(noisePosition);
+
+                // 소리 위치 도착
+                if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+                {
+                    animator.SetInteger("State", 0);
+
+                    waitTime += Time.deltaTime;
+
+                    if (waitTime >= investigateWaitTime)
+                    {
+                        waitTime = 0f;
+                        isInvestigating = false;
+
+                        ChooseNewDestination();
+                    }
+                }
+                return;
+            }
+        }
 
         // 현재 숨었는지
         bool hiddenNow = player.IsHidden;
@@ -157,17 +295,22 @@ public class EnemyAI : MonoBehaviour
         {
             wasHidden = false; // 다시 안 숨은 상태가 되면 초기화
         }
-        
+
         animator.SetInteger("State", 1); // 순찰
         agent.speed = 2.0f; // 순찰 속도 2.0f
+
 
         // 안 숨었고 시야에 보이면 추적
         if (!hiddenNow && sight.CanSeePlayer())
         {
             if (ignoreDoor) // 눈에 보여도 문이 막혀있으면 추적하면안됨
+            {
+                StopChaseBGM(); // 추격 사운드 정지
                 return;
-
+            }
             float distanceToPlayer = Vector3.Distance(transform.position, target.position);
+            // 추격 시작
+            StartChaseBGM();
 
             // 안죽었고 && 공격 범위 안에 들어오면 공격
             if (!player.IsDead && attackRange >= distanceToPlayer)
@@ -175,24 +318,28 @@ public class EnemyAI : MonoBehaviour
                 StartCoroutine(Attack());
                 return;
             }
-
             animator.SetInteger("State", 2); // 추적 애니메이션
             agent.speed = 3.5f; // 추격 속도 3.5f
             agent.SetDestination(target.position);
+
             isPatrolWaiting = false;
             waitTime = 0f;
         }
         else
         {
+            // 추격 종료
+            StopChaseBGM(); // 추격 사운드 정지
             // 목적지 도착 체크
-            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            if (!agent.pathPending &&
+                agent.remainingDistance <= agent.stoppingDistance)
             {
                 // 도착 후 잠깐 대기
                 if (isPatrolWaiting)
                 {
                     waitTime += Time.deltaTime;
 
-                    animator.SetInteger("State", 0); // Idle 애니메이션
+                    animator.SetInteger("State", 0); // Idle
+
                     if (waitTime >= 2f)
                     {
                         waitTime = 0f;

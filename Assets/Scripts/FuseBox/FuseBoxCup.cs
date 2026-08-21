@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class CupInteraction : MonoBehaviour, IInteractable
@@ -9,6 +10,10 @@ public class CupInteraction : MonoBehaviour, IInteractable
 
     public bool IsOpen => isOpen;
     public bool IsAnimating => isAnimating;
+
+    [Header("Sound")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip openSound;
 
     private void Awake()
     {
@@ -27,7 +32,20 @@ public class CupInteraction : MonoBehaviour, IInteractable
 
         // 상태 반전 및 애니메이션 트리거 실행
         isOpen = !isOpen;
+        if (audioSource != null && openSound != null)
+        {
+            audioSource.PlayOneShot(openSound);
+        }
 
+        if (interactor.TryGetComponent<PlayerController>(out _))
+        {
+            EnemyAI enemyAI = FindFirstObjectByType<EnemyAI>();
+
+            if (enemyAI != null)
+            {
+                enemyAI.HearNoise(transform.position);
+            }
+        }
         if (doorAnimator != null)
         {
             doorAnimator.SetTrigger("ToggleDoor");

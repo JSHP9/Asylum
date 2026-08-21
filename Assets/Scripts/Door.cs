@@ -8,6 +8,9 @@ public class Door : MonoBehaviour, IInteractable
     public bool IsLocked => isLocked; // 외부에서는 읽기만 가능, 수정은 Door 내부의 isLocked를 통해서만 가능(이거도 프로퍼티임)
     public bool IsOpen { get; private set; } = false; // public으로 외부 접근은 해야하는데 수정은 내부에서만 가능해야할때 프로퍼티 씀.
     public bool IsAnimating { get; private set; } = false; // 문열리는 중에 e키 눌림 방지, 안하면 문이 발광함
+    [Header("Sound")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip openSound;
     public void Interact(GameObject interactor)
     {
         if (IsLocked)
@@ -20,6 +23,16 @@ public class Door : MonoBehaviour, IInteractable
             return;
 
         IsOpen = !IsOpen;
+        if (audioSource != null)
+        {
+            if (openSound != null)
+                audioSource.PlayOneShot(openSound);
+
+            EnemyAI enemyAI = FindFirstObjectByType<EnemyAI>();
+
+            if (enemyAI != null)
+                enemyAI.HearNoise(transform.position);
+        }
         Quaternion targetRotation = IsOpen ? Quaternion.Euler(0f, 90f, 0f) : Quaternion.Euler(0f, 0f, 0f); // 문 열기 : 문 닫기 목표 각도 설정
 
         StartCoroutine(SmoothDoor(targetRotation));
