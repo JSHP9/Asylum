@@ -5,7 +5,9 @@ using System.Collections; // 코루틴 용도
 public class Padlock : MonoBehaviour, IInteractable
 {
     [SerializeField] private ItemType requiredKey; // 사용할 열쇠
-        [Header("Sound")]
+    public ItemType RequiredKey => requiredKey;
+
+    [Header("Sound")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip unlockSound;
     [SerializeField] private AudioClip dropSound;
