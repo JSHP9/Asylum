@@ -10,17 +10,34 @@ This project focuses on object-oriented design and gameplay systems while aiming
 
 ## Current Features
 
+### Player Systems
 - First-person player controller
-- Door interaction
 - Inventory system
+- Item interaction and item name display
+- Crouch system
+- Hide system
+- Pause system
+- Player death and respawn
+- Game over system
+
+### Puzzle & Interaction
+- Door interaction
 - Padlock puzzle
 - Code lock puzzle
 - Fuse box puzzle
+- Ending system
+
+### Enemy AI
+- Enemy patrol and chase
 - Enemy sight detection
-- Enemy chase & patrol
-- Crouch system
-- Hide system
-- AI door interaction
+- Enemy hearing system
+- AI door and obstacle interaction
+- AI attack system
+
+### Audio
+- Door, item, puzzle, and enemy SFX
+- Enemy idle and chase BGM
+- Attack and death-related audio
 
 ## Tech Stack
 
@@ -39,7 +56,7 @@ This project focuses on object-oriented design and gameplay systems while aiming
 - [x] Crouch
 - [x] Hide System
 - [x] AI Door Interaction
-- [ ] AI Model & Animation
-- [ ] AI Hearing
-- [ ] Ending
-- [ ] UI & Sound
+- [x] AI Model & Animation
+- [x] AI Hearing
+- [x] Ending
+- [x] UI & Sound
