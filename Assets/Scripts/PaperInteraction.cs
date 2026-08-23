@@ -7,6 +7,9 @@ public class PaperInteraction : MonoBehaviour, IInteractable
 
     [Header("Player Settings")]
     [SerializeField] private PlayerController playerController;
+    [Header("Sound")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip openSound;
 
     public void Interact(GameObject interactor)
     {
@@ -18,7 +21,10 @@ public class PaperInteraction : MonoBehaviour, IInteractable
 
         // 종이 UI 열기
         paperUI.SetActive(true);
-
+        if (openSound != null)
+        {
+            audioSource.PlayOneShot(openSound);
+        }
         // 마우스 커서 표시
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;

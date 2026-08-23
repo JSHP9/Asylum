@@ -3,6 +3,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -213,7 +214,7 @@ public class PlayerController : MonoBehaviour
 
         if (currentLives <= 0)
         { // 남은 목숨 없음
-            Debug.Log("Game Over");
+            SceneManager.LoadScene("Gameover_page");
             yield break;
         }
 
